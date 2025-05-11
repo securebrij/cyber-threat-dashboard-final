@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cyber Threat Intelligence Dashboard</title>
+</head>
+<body>
+    <h1>🚨 Recent Threats</h1>
+    <ul>
+        {% for item in data['results'] %}
+            <li><strong>{{ item.name }}</strong><br>{{ item.description }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
