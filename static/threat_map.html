@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    
+        <script>
+            L_NO_TOUCH = false;
+            L_DISABLE_3D = false;
+        </script>
+    
+    <style>html, body {width: 100%;height: 100%;margin: 0;padding: 0;}</style>
+    <style>#map {position:absolute;top:0;bottom:0;right:0;left:0;}</style>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_724c0410e36e530db43636182b24f58c {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+        
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.1.0/leaflet.markercluster.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.1.0/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.1.0/MarkerCluster.Default.css"/>
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_724c0410e36e530db43636182b24f58c" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_724c0410e36e530db43636182b24f58c = L.map(
+                "map_724c0410e36e530db43636182b24f58c",
+                {
+                    center: [20.0, 0.0],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 2,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_4b279714d801b3daf0149c25ad06762e = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_4b279714d801b3daf0149c25ad06762e.addTo(map_724c0410e36e530db43636182b24f58c);
+        
+    
+            var marker_cluster_3be2e8515521037edd2e788e46f7778f = L.markerClusterGroup(
+                {
+}
+            );
+        
+    
+            var marker_0aac03127535027e2a6e23086735c752 = L.marker(
+                [34.0544, -118.244],
+                {
+}
+            ).addTo(marker_cluster_3be2e8515521037edd2e788e46f7778f);
+        
+    
+            var icon_7ae09a2b4e3099c6776072fc8cac6c73 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_454ccfacfcfb11861ae435e6048d3b77 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_f04c9a87b61625f59bf7af84f068f51e = $(`<div id="html_f04c9a87b61625f59bf7af84f068f51e" style="width: 100.0%; height: 100.0%;"><b>CVE-2025-32756: FortiVoice Zero-Day Exploit Alert</b><br>Los Angeles, United States<br>156.236.76.90</div>`)[0];
+                popup_454ccfacfcfb11861ae435e6048d3b77.setContent(html_f04c9a87b61625f59bf7af84f068f51e);
+            
+        
+
+        marker_0aac03127535027e2a6e23086735c752.bindPopup(popup_454ccfacfcfb11861ae435e6048d3b77)
+        ;
+
+        
+    
+    
+                marker_0aac03127535027e2a6e23086735c752.setIcon(icon_7ae09a2b4e3099c6776072fc8cac6c73);
+            
+    
+            var marker_579f89aa21dfbde79526a59fdecce757 = L.marker(
+                [51.5092, -0.1189],
+                {
+}
+            ).addTo(marker_cluster_3be2e8515521037edd2e788e46f7778f);
+        
+    
+            var icon_c38674ff64b74cf874809f6e69c83f17 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_90ea7a31b2c437d50e7c0f80cc6ac349 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_04f88827b9ece2b06b90484639b3c1cf = $(`<div id="html_04f88827b9ece2b06b90484639b3c1cf" style="width: 100.0%; height: 100.0%;"><b>CVE-2025-32756: FortiVoice Zero-Day Exploit Alert</b><br>London, United Kingdom<br>198.105.127.124</div>`)[0];
+                popup_90ea7a31b2c437d50e7c0f80cc6ac349.setContent(html_04f88827b9ece2b06b90484639b3c1cf);
+            
+        
+
+        marker_579f89aa21dfbde79526a59fdecce757.bindPopup(popup_90ea7a31b2c437d50e7c0f80cc6ac349)
+        ;
+
+        
+    
+    
+                marker_579f89aa21dfbde79526a59fdecce757.setIcon(icon_c38674ff64b74cf874809f6e69c83f17);
+            
+    
+            var marker_c0ee672f17f5cf38af3921ff2be2389f = L.marker(
+                [24.144, 120.6844],
+                {
+}
+            ).addTo(marker_cluster_3be2e8515521037edd2e788e46f7778f);
+        
+    
+            var icon_2f03337e30627da74a73cd9e279ef67c = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_16354305a721cc97fd091bfceb000cf0 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_9a7d10f4ba24eb7db48a66e3e58dd733 = $(`<div id="html_9a7d10f4ba24eb7db48a66e3e58dd733" style="width: 100.0%; height: 100.0%;"><b>CVE-2025-32756: FortiVoice Zero-Day Exploit Alert</b><br>Taichung, Taiwan<br>218.187.69.244</div>`)[0];
+                popup_16354305a721cc97fd091bfceb000cf0.setContent(html_9a7d10f4ba24eb7db48a66e3e58dd733);
+            
+        
+
+        marker_c0ee672f17f5cf38af3921ff2be2389f.bindPopup(popup_16354305a721cc97fd091bfceb000cf0)
+        ;
+
+        
+    
+    
+                marker_c0ee672f17f5cf38af3921ff2be2389f.setIcon(icon_2f03337e30627da74a73cd9e279ef67c);
+            
+    
+            var marker_3a0e548c6d649f516d39ec29717fd7e6 = L.marker(
+                [24.144, 120.6844],
+                {
+}
+            ).addTo(marker_cluster_3be2e8515521037edd2e788e46f7778f);
+        
+    
+            var icon_25f5995d849730cc2053240ce28fa711 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_3945a9aae9f688ed0e8de87dc3cb305c = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_98d121f040a13ffa33f2a17d4a6c9800 = $(`<div id="html_98d121f040a13ffa33f2a17d4a6c9800" style="width: 100.0%; height: 100.0%;"><b>CVE-2025-32756: FortiVoice Zero-Day Exploit Alert</b><br>Taichung, Taiwan<br>218.187.69.59</div>`)[0];
+                popup_3945a9aae9f688ed0e8de87dc3cb305c.setContent(html_98d121f040a13ffa33f2a17d4a6c9800);
+            
+        
+
+        marker_3a0e548c6d649f516d39ec29717fd7e6.bindPopup(popup_3945a9aae9f688ed0e8de87dc3cb305c)
+        ;
+
+        
+    
+    
+                marker_3a0e548c6d649f516d39ec29717fd7e6.setIcon(icon_25f5995d849730cc2053240ce28fa711);
+            
+    
+            var marker_35dec54aca11243926ab66a2bdf85b66 = L.marker(
+                [25.033, 121.565],
+                {
+}
+            ).addTo(marker_cluster_3be2e8515521037edd2e788e46f7778f);
+        
+    
+            var icon_7eddeb25660cd265c573c3f3c0bf5693 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_343bb8223b4d0389ebe205aa8b7bdce3 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_e2804685825b6f8cb82aff596e2aa29d = $(`<div id="html_e2804685825b6f8cb82aff596e2aa29d" style="width: 100.0%; height: 100.0%;"><b>CVE-2025-32756: FortiVoice Zero-Day Exploit Alert</b><br>Taipei, Taiwan<br>43.228.217.173</div>`)[0];
+                popup_343bb8223b4d0389ebe205aa8b7bdce3.setContent(html_e2804685825b6f8cb82aff596e2aa29d);
+            
+        
+
+        marker_35dec54aca11243926ab66a2bdf85b66.bindPopup(popup_343bb8223b4d0389ebe205aa8b7bdce3)
+        ;
+
+        
+    
+    
+                marker_35dec54aca11243926ab66a2bdf85b66.setIcon(icon_7eddeb25660cd265c573c3f3c0bf5693);
+            
+    
+            var marker_8835c5d6fadd3e1094066f4ddb50a3d6 = L.marker(
+                [25.033, 121.565],
+                {
+}
+            ).addTo(marker_cluster_3be2e8515521037edd2e788e46f7778f);
+        
+    
+            var icon_d57c3f109691101e13faba47f724e952 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_ed3ef5683fc099e977af38ab2dc43691 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_93996c35768b2d262c93f53e9d3ab7c1 = $(`<div id="html_93996c35768b2d262c93f53e9d3ab7c1" style="width: 100.0%; height: 100.0%;"><b>CVE-2025-32756: FortiVoice Zero-Day Exploit Alert</b><br>Taipei, Taiwan<br>43.228.217.82</div>`)[0];
+                popup_ed3ef5683fc099e977af38ab2dc43691.setContent(html_93996c35768b2d262c93f53e9d3ab7c1);
+            
+        
+
+        marker_8835c5d6fadd3e1094066f4ddb50a3d6.bindPopup(popup_ed3ef5683fc099e977af38ab2dc43691)
+        ;
+
+        
+    
+    
+                marker_8835c5d6fadd3e1094066f4ddb50a3d6.setIcon(icon_d57c3f109691101e13faba47f724e952);
+            
+    
+            var marker_54b7cef60ca136ab2018c42a1fc7925f = L.marker(
+                [30.2943, 120.1663],
+                {
+}
+            ).addTo(marker_cluster_3be2e8515521037edd2e788e46f7778f);
+        
+    
+            var icon_f0a6d5c17e91d95fc3b813779cd5c7c4 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_374feb7ceadbd6d3c19701c45ad00794 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_b3b60954a2105ff5fdf8dc50e68773ec = $(`<div id="html_b3b60954a2105ff5fdf8dc50e68773ec" style="width: 100.0%; height: 100.0%;"><b>Modern Incident Response: Tackling Malicious ML Artifacts</b><br>Hangzhou, China<br>121.199.68.210</div>`)[0];
+                popup_374feb7ceadbd6d3c19701c45ad00794.setContent(html_b3b60954a2105ff5fdf8dc50e68773ec);
+            
+        
+
+        marker_54b7cef60ca136ab2018c42a1fc7925f.bindPopup(popup_374feb7ceadbd6d3c19701c45ad00794)
+        ;
+
+        
+    
+    
+                marker_54b7cef60ca136ab2018c42a1fc7925f.setIcon(icon_f0a6d5c17e91d95fc3b813779cd5c7c4);
+            
+    
+            marker_cluster_3be2e8515521037edd2e788e46f7778f.addTo(map_724c0410e36e530db43636182b24f58c);
+        
+</script>
+</html>
