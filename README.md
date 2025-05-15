@@ -49,3 +49,14 @@ A dynamic, interactive dashboard that visualizes real-time cyber threat intellig
 ```bash
 git clone https://github.com/yourusername/cyber-threat-dashboard.git
 cd cyber-threat-dashboard
+
+## 🧾 License
+
+MIT License © 2025 Brij Patel
+
+## 🙋‍♂️ Author
+
+**Brij Patel**  
+📫 [LinkedIn](https://www.linkedin.com/in/brij-patel-6b2a77284)  
+💻 [GitHub](https://github.com/securebrij)
+
