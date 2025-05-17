@@ -3,7 +3,7 @@
 
 A real-time, interactive dashboard that visualizes IPv4-based cyber threats using data from AlienVault OTX. Designed for analysts, students, and security enthusiasts to track global threat activity and gain actionable insights.
 
-![Screenshot](./screenshot.png)
+![Screenshot](./dashboard.png)
 
 ---
 
@@ -46,7 +46,7 @@ A real-time, interactive dashboard that visualizes IPv4-based cyber threats usin
 
 | Dashboard Map | Threat Cards |
 |---------------|--------------|
-| ![](./screenshot1.png) | ![](./screenshot2.png) |
+| ![](./map.png) | ![](./dashboard.png) |
 
 ---
 
@@ -54,8 +54,8 @@ A real-time, interactive dashboard that visualizes IPv4-based cyber threats usin
 
 1. Clone this repo:
 ```bash
-git clone https://github.com/securebrij/cyber-threat-dashboard.git
-cd cyber-threat-dashboard
+git clone https://github.com/securebrij/cyber-threat-dashboard-final.git
+cd cyber-threat-dashboard-final
 ```
 
 2. Install dependencies:
@@ -89,4 +89,3 @@ MIT License © 2025 Brij Patel
 
 ## 🌐 Live Demo
 > Coming soon on [Render](https://render.com)
-
