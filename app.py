@@ -1,64 +1,60 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, jsonify, render_template
 import requests
 import os
 
 app = Flask(__name__)
 
-# Your OTX and IP-API keys (ensure OTX_API_KEY is set in Render)
-OTX_API_KEY = os.environ.get("OTX_API_KEY")
-
-# Load mock data as fallback
-import json
-with open("mock_data.json", "r") as f:
-    mock_data = json.load(f)
-
-def fetch_threat_data():
-    headers = {"X-OTX-API-KEY": OTX_API_KEY} if OTX_API_KEY else {}
-    try:
-        url = "https://otx.alienvault.com/api/v1/pulses/subscribed"  # or latest
-        res = requests.get(url, headers=headers, timeout=10)
-        res.raise_for_status()
-        pulses = res.json().get("results", [])
-    except Exception as e:
-        print(f"Error fetching real threat data, using fallback: {e}")
-        return mock_data
-
-    processed = []
-    for pulse in pulses:
-        for ind in pulse.get("indicators", []):
-            if ind.get("type") == "IPv4":
-                ip = ind.get("indicator")
-                location_data = {}  # fallback if geolocation fails
-                try:
-                    geo = requests.get(f"http://ip-api.com/json/{ip}").json()
-                    location_data = {
-                        "lat": geo.get("lat"),
-                        "lon": geo.get("lon"),
-                        "city": geo.get("city"),
-                        "country": geo.get("country")
-                    }
-                except:
-                    continue
-
-                processed.append({
-                    "title": pulse.get("name"),
-                    "type": ind.get("type"),
-                    "indicator": ind.get("indicator"),
-                    "publisher": pulse.get("author_name", "Unknown"),
-                    "severity": pulse.get("threat_hunting_techniques", ["Medium"])[0],
-                    "created": pulse.get("created"),
-                    **location_data
-                })
-    return processed if processed else mock_data
-
 @app.route('/')
 def index():
-    return render_template("index.html")
+    return render_template('index.html')
 
 @app.route('/api/threats')
-def threats():
-    return jsonify(fetch_threat_data())
+def get_threats():
+    headers = {"X-OTX-API-KEY": os.environ.get("OTX_API_KEY")}
+    url = "https://otx.alienvault.com/api/v1/pulses/subscribed"
+
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        data = response.json().get("results", [])
+    except Exception as e:
+        print(f"⚠️ Error fetching from OTX: {e}")
+        data = []
+
+    ipv4_threats = []
+    for pulse in data:
+        for ind in pulse.get("indicators", []):
+            if ind.get("type") == "IPv4":
+                threat = {
+                    "title": pulse.get("name", "Unnamed Threat"),
+                    "indicator": ind.get("indicator", "N/A"),
+                    "type": ind.get("type", "N/A"),
+                    "publisher": pulse.get("author_name", "Unknown"),
+                    "severity": classify_severity(pulse.get("name", ""))
+                }
+                ipv4_threats.append(threat)
+
+    if not ipv4_threats:
+        print("⚠️ No valid IPv4 threats found. Using mock fallback.")
+        ipv4_threats = [
+            {
+                "title": "Mock CVE-2025-1234",
+                "indicator": "192.168.1.1",
+                "type": "Malware",
+                "publisher": "AlienVault",
+                "severity": "Medium"
+            }
+        ]
+
+    return jsonify(ipv4_threats)
+
+def classify_severity(title):
+    title = title.lower()
+    if "zero-day" in title or "exploit" in title:
+        return "High"
+    elif "phishing" in title or "domain" in title:
+        return "Medium"
+    else:
+        return "Low"
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
