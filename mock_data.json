@@ -1,0 +1,38 @@
+[
+  {
+    "name": "FortiVoice Zero-Day Exploit",
+    "created": "2025-05-15T10:00:00",
+    "author_name": "InQuest",
+    "indicators": [
+      { "indicator": "156.236.76.90", "type": "IPv4" },
+      { "indicator": "198.105.127.124", "type": "IPv4" }
+    ]
+  },
+  {
+    "name": "Malware Domain Alert",
+    "created": "2025-05-14T09:00:00",
+    "author_name": "AlienVault",
+    "indicators": [
+      { "indicator": "34.215.199.94", "type": "IPv4" },
+      { "indicator": "51.89.5.185", "type": "IPv4" }
+    ]
+  },
+  {
+    "name": "Suspicious Traffic",
+    "created": "2025-05-13T11:30:00",
+    "author_name": "CrowdStrike",
+    "indicators": [
+      { "indicator": "109.237.98.226", "type": "IPv4" },
+      { "indicator": "170.64.161.65", "type": "IPv4" }
+    ]
+  },
+  {
+    "name": "Phishing Campaign",
+    "created": "2025-05-12T08:45:00",
+    "author_name": "ThreatIntel",
+    "indicators": [
+      { "indicator": "185.134.23.83", "type": "IPv4" },
+      { "indicator": "192.241.202.20", "type": "IPv4" }
+    ]
+  }
+]

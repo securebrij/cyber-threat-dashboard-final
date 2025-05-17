@@ -1,101 +1,91 @@
-from flask import Flask, render_template, request, jsonify
+
 import requests
-import folium
+from flask import Flask, jsonify, render_template
 import os
-from folium.plugins import MarkerCluster
+import time
 
 app = Flask(__name__)
+API_KEY = os.getenv("OTX_API_KEY", "your-api-key")
+BASE_URL = "https://otx.alienvault.com/api/v1/pulses/subscribed"
 
-# Fetch threat data from OTX
-def get_threat_data():
-    url = "https://otx.alienvault.com/api/v1/pulses/subscribed"
-    headers = {
-        "X-OTX-API-KEY": "2649b648d64ca33ba373c6fa1e171589b24af420b2a68cc59c5ece1c1cb9fe5b"
-    }
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        return response.json()
-    return {"results": []}
+def assign_severity(title):
+    title = title.lower()
+    if any(keyword in title for keyword in ["ransomware", "critical", "exploit", "apt"]):
+        return "High"
+    elif any(keyword in title for keyword in ["scan", "brute", "suspicious"]):
+        return "Low"
+    return "Medium"
 
-# Get geolocation for an IP
+def mock_data():
+    return [
+        {
+            "indicator": "192.168.1.100",
+            "title": "Mock Threat: Ransomware",
+            "created": "2025-05-17",
+            "publisher": "Mock Publisher",
+            "type": "IPv4",
+            "severity": "High",
+            "location": "Mockville",
+            "latitude": 0.0,
+            "longitude": 0.0
+        },
+        {
+            "indicator": "10.0.0.45",
+            "title": "Mock Threat: Brute Force",
+            "created": "2025-05-17",
+            "publisher": "Mock Publisher",
+            "type": "IPv4",
+            "severity": "Low",
+            "location": "Mockland",
+            "latitude": 0.0,
+            "longitude": 0.0
+        }
+    ]
 
-def get_ip_geolocation(ip):
-    try:
-        response = requests.get(f"http://ip-api.com/json/{ip}")
-        data = response.json()
-        if data['status'] == 'success':
-            return {
-                "lat": data['lat'],
-                "lon": data['lon'],
-                "city": data['city'],
-                "country": data['country']
-            }
-    except:
-        pass
-    return None
-
-# Parse threat data
-
-def extract_ip_locations(pulse_data, threat_type_filter=None):
-    locations = []
-    for pulse in pulse_data.get("results", []):
-        pulse_type = pulse.get("TLP", "Medium")  # default if not given
-        if threat_type_filter and pulse_type != threat_type_filter:
-            continue
-        for indicator in pulse.get("indicators", []):
-            if indicator.get("type") == "IPv4":
-                ip = indicator.get("indicator")
-                loc = get_ip_geolocation(ip)
-                if loc:
-                    locations.append({
-                        "ip": ip,
-                        "pulse": pulse.get("name", "Unknown Threat"),
-                        "lat": loc['lat'],
-                        "lon": loc['lon'],
-                        "city": loc['city'],
-                        "country": loc['country'],
-                        "severity": pulse_type
-                    })
-    return locations
-
-# Generate threat map
-
-def generate_threat_map(locations):
-    m = folium.Map(location=[20, 0], zoom_start=2, tiles='CartoDB dark_matter')
-    cluster = MarkerCluster().add_to(m)
-
-    for loc in locations:
-        color = {
-            "High": "red",
-            "Medium": "orange",
-            "Low": "green"
-        }.get(loc.get("severity", "Medium"), "blue")
-
-        popup = f"<b>{loc['pulse']}</b><br>{loc['city']}, {loc['country']}<br>{loc['ip']}"
-
-        folium.Marker(
-            location=[loc["lat"], loc["lon"]],
-            popup=popup,
-            icon=folium.Icon(color=color)
-        ).add_to(cluster)
-
-    map_path = os.path.join("static", "threat_map.html")
-    m.save(map_path)
-    return map_path
+def fetch_paginated_threats(limit=10, max_pages=1):
+    all_indicators = []
+    headers = {"X-OTX-API-KEY": API_KEY}
+    for page in range(1, max_pages + 1):
+        for attempt in range(3):
+            try:
+                print(f"Fetching page {page}, attempt {attempt + 1}...")
+                response = requests.get(f"{BASE_URL}?limit={limit}&page={page}", headers=headers, timeout=10)
+                if response.status_code != 200:
+                    print(f"Failed on page {page}: {response.status_code}")
+                    break
+                data = response.json()
+                for pulse in data.get("results", []):
+                    severity = assign_severity(pulse.get("name", ""))
+                    for indicator in pulse.get("indicators", []):
+                        if indicator.get("type") == "IPv4":
+                            all_indicators.append({
+                                "indicator": indicator.get("indicator"),
+                                "title": pulse.get("name", "No Title"),
+                                "created": pulse.get("created"),
+                                "publisher": pulse.get("author_name", "Unknown"),
+                                "type": indicator.get("type"),
+                                "severity": severity,
+                                "location": "Unknown",
+                                "latitude": 0.0,
+                                "longitude": 0.0
+                            })
+                break
+            except Exception as e:
+                print(f"Attempt {attempt + 1} failed: {e}")
+                time.sleep(2)
+    if not all_indicators:
+        print("No real threats fetched. Injecting mock data...")
+        all_indicators = mock_data()
+    return all_indicators
 
 @app.route("/")
-def home():
-    threat_type = request.args.get("type", "All")
-    data = get_threat_data()
-    locations = extract_ip_locations(data, None if threat_type == "All" else threat_type)
-    map_path = generate_threat_map(locations)
-    return render_template("index.html", threat_map=map_path, threats=locations, selected_type=threat_type)
+def index():
+    return render_template("index.html")
 
 @app.route("/api/threats")
-def api_threats():
-    data = get_threat_data()
-    locations = extract_ip_locations(data)
-    return jsonify(locations)
+def get_threats():
+    data = fetch_paginated_threats()
+    return jsonify(data)
 
 if __name__ == "__main__":
-    app.run(debug=True, port=10000, host='0.0.0.0')
+    app.run(debug=True)
