@@ -1,91 +1,70 @@
-
 # 🛡️ Cyber Threat Intelligence Dashboard
 
 A real-time, interactive dashboard that visualizes IPv4-based cyber threats using data from AlienVault OTX. Designed for analysts, students, and security enthusiasts to track global threat activity and gain actionable insights.
 
-![Screenshot](./dashboard.png)
+🔗 **Live Site:** [https://cyber-threat-dashboard-final.onrender.com](https://cyber-threat-dashboard-final.onrender.com)
 
 ---
 
 ## 🚀 Features
 
-- 🌍 **Interactive Map** – Displays threats on a dark-themed global map
-- ⚡ **Real-Time Threat Feed** – Pulled directly from AlienVault OTX
-- 🔍 **Threat Type Filtering** – Dynamic filtering by threat category
-- 🟢 **Severity Tags** – High (Red), Medium (Orange), Low (Green)
-- 📋 **Threat Detail Cards** – View details by source, IP, and publisher
-- 🔁 **Auto-Refresh** – Dashboard updates automatically every 60 seconds
-- 📈 **Analytics** – Bar, Pie, and Timeline charts powered by Chart.js
-- 📄 **Export** – Download threat data as CSV
-- 🧪 **Mock Fallback** – When API fails, mock threats load automatically
-- 🌙 **Dark/Light Mode** – Toggle themes with synced map styling
-- 📱 **Responsive UI** – Looks great on desktop or mobile
+- **🗺️ Interactive Map** – Geolocates and displays threat sources on a dark-themed global map.
+- **📡 Real-Time Threat Feed** – Pulls from AlienVault’s OTX API with current threat indicators.
+- **🛠️ Threat Type Filtering** – Dynamically filter threats by categories (e.g., Malware, Phishing).
+- **🎯 Severity Markers** – Color-coded markers represent severity: High (red), Medium (orange), Low (green).
+- **❌ Threat Detail Cards** – Hover or click for detailed info including IP, location, and description.
+- **🔄 Auto-Refresh** – Live dashboard refreshes automatically every few minutes.
 
 ---
 
-## 🛠️ Tech Stack
+## 🧱 Tech Stack
 
-**Frontend:**
-- HTML, CSS, JavaScript
-- Chart.js for analytics
-- Bootstrap styling (optional)
-
-**Backend:**
-- Python + Flask
-
-**APIs:**
-- AlienVault OTX for threat intelligence
-- IP geolocation via IP-API (mock-based)
-
-**Mapping:**
-- Leaflet.js + OpenStreetMap + Carto Dark Tiles (via Folium or static)
+- **Frontend:** HTML, CSS, JavaScript, Bootstrap
+- **Backend:** Python, Flask
+- **Mapping:** Leaflet.js + OpenStreetMap
+- **Geolocation API:** IP-API.com
+- **Threat Intelligence API:** AlienVault OTX
 
 ---
 
 ## 📸 Screenshots
 
 | Dashboard Map | Threat Cards |
-|---------------|--------------|
-| ![](./map.png) | ![](./dashboard.png) |
+|---------------|---------------|
+| ![Map](dashboard.png) | ![Cards](map.png) |
 
 ---
 
-## 📦 Installation
+## ⚙️ Installation
 
-1. Clone this repo:
+1. **Clone the Repository**
+
 ```bash
 git clone https://github.com/securebrij/cyber-threat-dashboard-final.git
 cd cyber-threat-dashboard-final
 ```
 
-2. Install dependencies:
+2. **Install Dependencies**
+
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Set your OTX API Key:
-```bash
-export OTX_API_KEY=your_key_here  # For Windows use: set OTX_API_KEY=your_key_here
-```
+3. **Run the Application**
 
-4. Run the app:
 ```bash
 python app.py
 ```
-
-Visit `http://127.0.0.1:5000` in your browser.
 
 ---
 
 ## 📄 License
 MIT License © 2025 Brij Patel
 
-## 👤 Author
-**Brij Patel**  
-📎 [LinkedIn](https://www.linkedin.com/in/brij-patel-6b2a77284)  
-💻 [GitHub](https://github.com/securebrij)
-
 ---
 
-## 🌐 Live Demo
-> Coming soon on [Render](https://render.com)
+## 👨‍💻 Author
+
+**Brij Patel**  
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/brij-patel-6b2a77284)  
+[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/securebrij)
