@@ -1,91 +1,64 @@
-
+from flask import Flask, render_template, jsonify
 import requests
-from flask import Flask, jsonify, render_template
 import os
-import time
 
 app = Flask(__name__)
-API_KEY = os.getenv("OTX_API_KEY", "your-api-key")
-BASE_URL = "https://otx.alienvault.com/api/v1/pulses/subscribed"
 
-def assign_severity(title):
-    title = title.lower()
-    if any(keyword in title for keyword in ["ransomware", "critical", "exploit", "apt"]):
-        return "High"
-    elif any(keyword in title for keyword in ["scan", "brute", "suspicious"]):
-        return "Low"
-    return "Medium"
+# Your OTX and IP-API keys (ensure OTX_API_KEY is set in Render)
+OTX_API_KEY = os.environ.get("OTX_API_KEY")
 
-def mock_data():
-    return [
-        {
-            "indicator": "192.168.1.100",
-            "title": "Mock Threat: Ransomware",
-            "created": "2025-05-17",
-            "publisher": "Mock Publisher",
-            "type": "IPv4",
-            "severity": "High",
-            "location": "Mockville",
-            "latitude": 0.0,
-            "longitude": 0.0
-        },
-        {
-            "indicator": "10.0.0.45",
-            "title": "Mock Threat: Brute Force",
-            "created": "2025-05-17",
-            "publisher": "Mock Publisher",
-            "type": "IPv4",
-            "severity": "Low",
-            "location": "Mockland",
-            "latitude": 0.0,
-            "longitude": 0.0
-        }
-    ]
+# Load mock data as fallback
+import json
+with open("mock_data.json", "r") as f:
+    mock_data = json.load(f)
 
-def fetch_paginated_threats(limit=10, max_pages=1):
-    all_indicators = []
-    headers = {"X-OTX-API-KEY": API_KEY}
-    for page in range(1, max_pages + 1):
-        for attempt in range(3):
-            try:
-                print(f"Fetching page {page}, attempt {attempt + 1}...")
-                response = requests.get(f"{BASE_URL}?limit={limit}&page={page}", headers=headers, timeout=10)
-                if response.status_code != 200:
-                    print(f"Failed on page {page}: {response.status_code}")
-                    break
-                data = response.json()
-                for pulse in data.get("results", []):
-                    severity = assign_severity(pulse.get("name", ""))
-                    for indicator in pulse.get("indicators", []):
-                        if indicator.get("type") == "IPv4":
-                            all_indicators.append({
-                                "indicator": indicator.get("indicator"),
-                                "title": pulse.get("name", "No Title"),
-                                "created": pulse.get("created"),
-                                "publisher": pulse.get("author_name", "Unknown"),
-                                "type": indicator.get("type"),
-                                "severity": severity,
-                                "location": "Unknown",
-                                "latitude": 0.0,
-                                "longitude": 0.0
-                            })
-                break
-            except Exception as e:
-                print(f"Attempt {attempt + 1} failed: {e}")
-                time.sleep(2)
-    if not all_indicators:
-        print("No real threats fetched. Injecting mock data...")
-        all_indicators = mock_data()
-    return all_indicators
+def fetch_threat_data():
+    headers = {"X-OTX-API-KEY": OTX_API_KEY} if OTX_API_KEY else {}
+    try:
+        url = "https://otx.alienvault.com/api/v1/pulses/subscribed"  # or latest
+        res = requests.get(url, headers=headers, timeout=10)
+        res.raise_for_status()
+        pulses = res.json().get("results", [])
+    except Exception as e:
+        print(f"Error fetching real threat data, using fallback: {e}")
+        return mock_data
 
-@app.route("/")
+    processed = []
+    for pulse in pulses:
+        for ind in pulse.get("indicators", []):
+            if ind.get("type") == "IPv4":
+                ip = ind.get("indicator")
+                location_data = {}  # fallback if geolocation fails
+                try:
+                    geo = requests.get(f"http://ip-api.com/json/{ip}").json()
+                    location_data = {
+                        "lat": geo.get("lat"),
+                        "lon": geo.get("lon"),
+                        "city": geo.get("city"),
+                        "country": geo.get("country")
+                    }
+                except:
+                    continue
+
+                processed.append({
+                    "title": pulse.get("name"),
+                    "type": ind.get("type"),
+                    "indicator": ind.get("indicator"),
+                    "publisher": pulse.get("author_name", "Unknown"),
+                    "severity": pulse.get("threat_hunting_techniques", ["Medium"])[0],
+                    "created": pulse.get("created"),
+                    **location_data
+                })
+    return processed if processed else mock_data
+
+@app.route('/')
 def index():
     return render_template("index.html")
 
-@app.route("/api/threats")
-def get_threats():
-    data = fetch_paginated_threats()
-    return jsonify(data)
+@app.route('/api/threats')
+def threats():
+    return jsonify(fetch_threat_data())
 
-if __name__ == "__main__":
-    app.run(debug=True)
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
