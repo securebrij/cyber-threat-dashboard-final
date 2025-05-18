@@ -1,60 +1,52 @@
-from flask import Flask, jsonify, render_template
+from flask import Flask, render_template, jsonify
 import requests
 import os
 
 app = Flask(__name__)
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+OTX_API_KEY = os.getenv("OTX_API_KEY")
 
-@app.route('/api/threats')
-def get_threats():
-    headers = {"X-OTX-API-KEY": os.environ.get("OTX_API_KEY")}
-    url = "https://otx.alienvault.com/api/v1/pulses/subscribed"
-
+# Fetch and flatten threat data from AlienVault OTX
+def fetch_data_from_otx():
+    headers = {"X-OTX-API-KEY": OTX_API_KEY}
+    url = "https://otx.alienvault.com/api/v1/pulses/subscribed"  # Use /latest if needed
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        data = response.json().get("results", [])
+        res = requests.get(url, headers=headers, timeout=10)
+        res.raise_for_status()
+        raw_data = res.json().get("results", [])
+        return raw_data
     except Exception as e:
-        print(f"⚠️ Error fetching from OTX: {e}")
-        data = []
+        print(f"Error fetching OTX data: {e}")
+        return []
 
-    ipv4_threats = []
-    for pulse in data:
+# Flatten pulse data into individual threat entries
+@app.route("/api/threats")
+def get_threats():
+    pulses = fetch_data_from_otx()
+    threats = []
+
+    for pulse in pulses:
+        publisher = pulse.get("author_name", "Unknown")
+        title = pulse.get("name", "Unknown Threat")
+        created = pulse.get("created", "")
+        severity = "Medium"  # Default or customize by pulse tags later
+
         for ind in pulse.get("indicators", []):
-            if ind.get("type") == "IPv4":
-                threat = {
-                    "title": pulse.get("name", "Unnamed Threat"),
-                    "indicator": ind.get("indicator", "N/A"),
-                    "type": ind.get("type", "N/A"),
-                    "publisher": pulse.get("author_name", "Unknown"),
-                    "severity": classify_severity(pulse.get("name", ""))
-                }
-                ipv4_threats.append(threat)
+            threats.append({
+                "title": title,
+                "indicator": ind.get("indicator", "N/A"),
+                "type": ind.get("type", "N/A"),
+                "publisher": publisher,
+                "created": created,
+                "severity": severity
+            })
 
-    if not ipv4_threats:
-        print("⚠️ No valid IPv4 threats found. Using mock fallback.")
-        ipv4_threats = [
-            {
-                "title": "Mock CVE-2025-1234",
-                "indicator": "192.168.1.1",
-                "type": "Malware",
-                "publisher": "AlienVault",
-                "severity": "Medium"
-            }
-        ]
+    return jsonify(threats)
 
-    return jsonify(ipv4_threats)
+@app.route("/")
+def index():
+    return render_template("index.html")
 
-def classify_severity(title):
-    title = title.lower()
-    if "zero-day" in title or "exploit" in title:
-        return "High"
-    elif "phishing" in title or "domain" in title:
-        return "Medium"
-    else:
-        return "Low"
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
