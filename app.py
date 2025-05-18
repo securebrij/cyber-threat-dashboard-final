@@ -1,52 +1,114 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 import requests
 import os
+from datetime import datetime
 
 app = Flask(__name__)
 
-OTX_API_KEY = os.getenv("OTX_API_KEY")
-
-# Fetch and flatten threat data from AlienVault OTX
-def fetch_data_from_otx():
-    headers = {"X-OTX-API-KEY": OTX_API_KEY}
-    url = "https://otx.alienvault.com/api/v1/pulses/subscribed"  # Use /latest if needed
-    try:
-        res = requests.get(url, headers=headers, timeout=10)
-        res.raise_for_status()
-        raw_data = res.json().get("results", [])
-        return raw_data
-    except Exception as e:
-        print(f"Error fetching OTX data: {e}")
-        return []
-
-# Flatten pulse data into individual threat entries
-@app.route("/api/threats")
-def get_threats():
-    pulses = fetch_data_from_otx()
-    threats = []
-
-    for pulse in pulses:
-        publisher = pulse.get("author_name", "Unknown")
-        title = pulse.get("name", "Unknown Threat")
-        created = pulse.get("created", "")
-        severity = "Medium"  # Default or customize by pulse tags later
-
-        for ind in pulse.get("indicators", []):
-            threats.append({
-                "title": title,
-                "indicator": ind.get("indicator", "N/A"),
-                "type": ind.get("type", "N/A"),
-                "publisher": publisher,
-                "created": created,
-                "severity": severity
-            })
-
-    return jsonify(threats)
+MOCK_DATA = [
+    {
+        "name": "PhishTank - Dynamic List of Verified/Online Banking Phishing URLs",
+        "location": {
+            "city": "Los Angeles",
+            "country": "United States",
+            "lat": 34.0522,
+            "lon": -118.2437
+        },
+        "ip": "156.236.76.90",
+        "type": "Phishing",
+        "publisher": "VertekLabs",
+        "created": "2025-05-15T10:00:00",
+        "severity": "Medium"
+    },
+    {
+        "name": "PhishTank - Dynamic List of Verified/Online Banking Phishing URLs",
+        "location": {
+            "city": "London",
+            "country": "United Kingdom",
+            "lat": 51.5074,
+            "lon": -0.1278
+        },
+        "ip": "198.105.127.124",
+        "type": "Phishing",
+        "publisher": "VertekLabs",
+        "created": "2025-05-14T09:00:00",
+        "severity": "High"
+    },
+    {
+        "name": "PhishTank - Dynamic List of Verified/Online Banking Phishing URLs",
+        "location": {
+            "city": "Taichung",
+            "country": "Taiwan",
+            "lat": 24.1477,
+            "lon": 120.6736
+        },
+        "ip": "218.187.69.59",
+        "type": "Phishing",
+        "publisher": "VertekLabs",
+        "created": "2025-05-13T11:30:00",
+        "severity": "Low"
+    }
+]
 
 @app.route("/")
-def index():
+def home():
     return render_template("index.html")
 
+@app.route("/api/threats")
+def get_threats():
+    search = request.args.get("search", "").lower()
+    threat_type = request.args.get("type")
+    publisher = request.args.get("publisher")
+    severity_filter = request.args.get("severity")
+    sort_by = request.args.get("sort")
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", 10))
+
+    filtered = MOCK_DATA
+
+    if search:
+        filtered = [t for t in filtered if search in t["name"].lower()]
+    if threat_type and threat_type != "All":
+        filtered = [t for t in filtered if t["type"] == threat_type]
+    if publisher and publisher != "All":
+        filtered = [t for t in filtered if t["publisher"] == publisher]
+    if severity_filter and severity_filter != "All":
+        filtered = [t for t in filtered if t["severity"] == severity_filter]
+
+    if sort_by == "severity":
+        severity_order = {"High": 3, "Medium": 2, "Low": 1}
+        filtered.sort(key=lambda t: severity_order.get(t["severity"], 0), reverse=True)
+    elif sort_by == "date":
+        filtered.sort(key=lambda t: t.get("created", ""), reverse=True)
+
+    total_threats = len(filtered)
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated = filtered[start:end]
+
+    chart_data = {
+        "severity": {},
+        "publisher": {},
+        "timeline": {}
+    }
+
+    for threat in filtered:
+        sev = threat.get("severity", "Unknown")
+        pub = threat.get("publisher", "Unknown")
+        date = datetime.strptime(threat.get("created"), "%Y-%m-%dT%H:%M:%S").strftime("%Y-%m-%d")
+
+        chart_data["severity"][sev] = chart_data["severity"].get(sev, 0) + 1
+        chart_data["publisher"][pub] = chart_data["publisher"].get(pub, 0) + 1
+        chart_data["timeline"][date] = chart_data["timeline"].get(date, 0) + 1
+
+    return jsonify({
+        "threats": paginated,
+        "total": total_threats,
+        "page": page,
+        "per_page": per_page,
+        "chart_data": chart_data
+    })
+
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(debug=True, host="0.0.0.0", port=port)
