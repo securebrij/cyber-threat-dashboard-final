@@ -3,7 +3,7 @@ services:
     name: cyber-threat-dashboard
     runtime: python
     buildCommand: ""
-    startCommand: "python app.py"
+    startCommand: "gunicorn app:app"
     envVars:
       - key: PORT
         value: 10000
