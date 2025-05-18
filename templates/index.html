@@ -1,214 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cyber Threat Dashboard</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/leaflet.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #0f111a;
-      color: white;
-    }
-    .container {
-      display: grid;
-      grid-template-columns: 1fr 2fr;
-      height: 100vh;
-    }
-    .sidebar {
-      padding: 1rem;
-      background-color: #0f111a;
-      overflow-y: auto;
-    }
-    .card {
-      background-color: #1e3a8a;
-      margin: 0.5rem 0;
-      padding: 1rem;
-      border-radius: 12px;
-      border-left: 8px solid gold;
-    }
-    .card .severity {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 8px;
-      margin-top: 8px;
-      font-weight: bold;
-    }
-    .severity.High {
-      background-color: red;
-    }
-    .severity.Medium {
-      background-color: gold;
-      color: black;
-    }
-    .severity.Low {
-      background-color: limegreen;
-    }
-    #map {
-      height: 100%;
-      width: 100%;
-    }
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .charts {
-      padding: 1rem;
-      background-color: #1a1c28;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Threat Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #0f1117;
+            color: white;
+        }
+        header {
+            background-color: #1f2233;
+            padding: 1rem;
+            text-align: center;
+            font-size: 2rem;
+        }
+        .container {
+            display: flex;
+        }
+        .sidebar {
+            width: 320px;
+            background: #141620;
+            padding: 1rem;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        .map {
+            flex: 1;
+            height: 100vh;
+        }
+        .card {
+            background: #1e3a8a;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 8px solid gold;
+            border-radius: 10px;
+        }
+        .card h3 {
+            margin: 0 0 0.5rem 0;
+        }
+        .card .tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        .tag.High { background-color: #dc2626; color: white; }
+        .tag.Medium { background-color: #facc15; color: black; }
+        .tag.Low { background-color: #22c55e; color: white; }
+        .charts {
+            display: flex;
+            justify-content: space-around;
+            background: #141620;
+            padding: 1rem;
+        }
+        canvas {
+            background: white;
+            border-radius: 8px;
+            padding: 0.5rem;
+        }
+        select, input {
+            width: 100%;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 0.5rem;
+            background-color: #3b82f6;
+            border: none;
+            border-radius: 5px;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
+<header>Cyber Threat Dashboard</header>
+<div class="container">
     <div class="sidebar">
-      <div class="controls">
-        <input type="text" id="search" placeholder="Search threats..." />
-        <select id="categoryFilter"></select>
+        <input type="text" id="search" placeholder="Search threats...">
+        <select id="typeFilter"></select>
         <select id="publisherFilter"></select>
         <select id="severityFilter">
-          <option value="">All Severities</option>
-          <option value="High">High</option>
-          <option value="Medium">Medium</option>
-          <option value="Low">Low</option>
+            <option value="">All Severities</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
         </select>
-        <select id="sortFilter">
-          <option value="">Sort By</option>
-          <option value="asc">Timestamp ↑</option>
-          <option value="desc">Timestamp ↓</option>
+        <select id="sortOption">
+            <option value="">Sort By</option>
+            <option value="timestamp">Timestamp</option>
+            <option value="severity">Severity</option>
         </select>
         <button onclick="applyFilters()">Apply Filters</button>
-      </div>
-      <div id="threatCards"></div>
-      <div class="charts">
-        <canvas id="barChart"></canvas>
-        <canvas id="pieChart"></canvas>
-        <canvas id="lineChart"></canvas>
-      </div>
+        <div id="threatCards"></div>
     </div>
-    <div id="map"></div>
-  </div>
-  <script>
-    const map = L.map('map').setView([20, 0], 2);
+    <div id="map" class="map"></div>
+</div>
+<div class="charts">
+    <canvas id="barChart" width="300" height="200"></canvas>
+    <canvas id="pieChart" width="300" height="200"></canvas>
+    <canvas id="lineChart" width="300" height="200"></canvas>
+</div>
+<script>
+let threats = [], chartData = {}, map;
+
+function createMap() {
+    map = L.map('map').setView([20, 0], 2);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
     }).addTo(map);
+}
 
-    setTimeout(() => map.invalidateSize(), 500);
+function renderPage(threats) {
+    const container = document.getElementById('threatCards');
+    container.innerHTML = '';
+    threats.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `<h3>${t.name}</h3>
+            ${t.indicator} | ${t.type} | ${t.author_name}<br>
+            <span class="tag ${t.severity}">${t.severity}</span>`;
+        container.appendChild(card);
+        if (t.lat && t.lon) {
+            L.circleMarker([t.lat, t.lon], {
+                radius: 6,
+                color: getSeverityColor(t.severity),
+                fillOpacity: 0.9
+            }).addTo(map);
+        }
+    });
+}
 
-    async function fetchThreats() {
-      const res = await fetch("/api/threats");
-      const data = await res.json();
-      renderPage(data);
-    }
+function getSeverityColor(level) {
+    return level === 'High' ? 'red' : level === 'Medium' ? 'orange' : 'lime';
+}
 
-    function renderPage(threats) {
-      window.originalThreats = threats;
-      populateFilters(threats);
-      renderThreatCards(threats);
-      renderCharts(threats);
-      renderMap(threats);
-    }
+function populateFilters(threats) {
+    const types = new Set(threats.map(t => t.type));
+    const publishers = new Set(threats.map(t => t.author_name));
 
-    function populateFilters(threats) {
-      const catSet = new Set();
-      const pubSet = new Set();
-      threats.forEach(t => {
-        catSet.add(t.type);
-        pubSet.add(t.author_name);
-      });
-      const catF = document.getElementById("categoryFilter");
-      const pubF = document.getElementById("publisherFilter");
-      catF.innerHTML = `<option value="">All Categories</option>` + [...catSet].map(c => `<option value="${c}">${c}</option>`).join('');
-      pubF.innerHTML = `<option value="">All Publishers</option>` + [...pubSet].map(p => `<option value="${p}">${p}</option>`).join('');
-    }
+    const typeFilter = document.getElementById('typeFilter');
+    const publisherFilter = document.getElementById('publisherFilter');
+    typeFilter.innerHTML = '<option value="">All Types</option>';
+    publisherFilter.innerHTML = '<option value="">All Publishers</option>';
 
-    function applyFilters() {
-      const search = document.getElementById("search").value.toLowerCase();
-      const category = document.getElementById("categoryFilter").value;
-      const publisher = document.getElementById("publisherFilter").value;
-      const severity = document.getElementById("severityFilter").value;
-      const sort = document.getElementById("sortFilter").value;
+    types.forEach(type => typeFilter.innerHTML += `<option value="${type}">${type}</option>`);
+    publishers.forEach(pub => publisherFilter.innerHTML += `<option value="${pub}">${pub}</option>`);
+}
 
-      let filtered = [...window.originalThreats];
+function applyFilters() {
+    const keyword = document.getElementById('search').value.toLowerCase();
+    const type = document.getElementById('typeFilter').value;
+    const publisher = document.getElementById('publisherFilter').value;
+    const severity = document.getElementById('severityFilter').value;
+    const sortBy = document.getElementById('sortOption').value;
 
-      if (search) filtered = filtered.filter(t => t.name.toLowerCase().includes(search));
-      if (category) filtered = filtered.filter(t => t.type === category);
-      if (publisher) filtered = filtered.filter(t => t.author_name === publisher);
-      if (severity) filtered = filtered.filter(t => t.severity === severity);
-      if (sort) filtered.sort((a, b) => sort === 'asc' ? new Date(a.created) - new Date(b.created) : new Date(b.created) - new Date(a.created));
+    let filtered = threats.filter(t => {
+        return (!keyword || t.name.toLowerCase().includes(keyword)) &&
+               (!type || t.type === type) &&
+               (!publisher || t.author_name === publisher) &&
+               (!severity || t.severity === severity);
+    });
 
-      renderThreatCards(filtered);
-      renderCharts(filtered);
-      renderMap(filtered);
-    }
+    if (sortBy === 'timestamp') filtered.sort((a, b) => new Date(b.created) - new Date(a.created));
+    if (sortBy === 'severity') filtered.sort((a, b) => severityRank(b.severity) - severityRank(a.severity));
 
-    function renderThreatCards(threats) {
-      const el = document.getElementById("threatCards");
-      el.innerHTML = "";
-      threats.forEach(t => {
-        const div = document.createElement("div");
-        div.className = "card";
-        div.innerHTML = `<strong>${t.name}</strong><br>${t.indicator} | ${t.type} | ${t.author_name}<br><span class="severity ${t.severity}">${t.severity}</span>`;
-        el.appendChild(div);
-      });
-    }
+    renderPage(filtered);
+}
 
-    function renderMap(threats) {
-      map.eachLayer(layer => { if (layer instanceof L.Marker) map.removeLayer(layer); });
-      threats.forEach(t => {
-        if (t.location) L.circleMarker(t.location, {
-          radius: 8,
-          color: severityColor(t.severity),
-          fillOpacity: 0.9
-        }).addTo(map).bindPopup(t.name);
-      });
-    }
+function severityRank(level) {
+    return level === 'High' ? 3 : level === 'Medium' ? 2 : 1;
+}
 
-    function severityColor(sev) {
-      return sev === "High" ? "red" : sev === "Medium" ? "gold" : "limegreen";
-    }
-
-    function renderCharts(threats) {
-      const bySeverity = threats.reduce((a, t) => {
-        a[t.severity] = (a[t.severity] || 0) + 1; return a;
-      }, {});
-      const byDate = threats.reduce((a, t) => {
-        const d = new Date(t.created).toLocaleDateString();
-        a[d] = (a[d] || 0) + 1; return a;
-      }, {});
-
-      new Chart(document.getElementById("barChart"), {
+function renderCharts(data) {
+    new Chart(document.getElementById('barChart'), {
         type: 'bar',
-        data: {
-          labels: Object.keys(bySeverity),
-          datasets: [{ label: "Threats by Severity", data: Object.values(bySeverity) }]
-        }
-      });
-
-      new Chart(document.getElementById("pieChart"), {
+        data: { labels: data.labels, datasets: [{ label: 'Threats by Type', data: data.by_type }] }
+    });
+    new Chart(document.getElementById('pieChart'), {
         type: 'pie',
-        data: {
-          labels: Object.keys(bySeverity),
-          datasets: [{ data: Object.values(bySeverity) }]
-        }
-      });
-
-      new Chart(document.getElementById("lineChart"), {
+        data: { labels: data.labels, datasets: [{ data: data.by_severity }] }
+    });
+    new Chart(document.getElementById('lineChart'), {
         type: 'line',
-        data: {
-          labels: Object.keys(byDate),
-          datasets: [{ label: "Threats Over Time", data: Object.values(byDate) }]
-        }
-      });
-    }
+        data: { labels: data.labels, datasets: [{ label: 'Threat Trend', data: data.by_date }] }
+    });
+}
 
-    fetchThreats();
-  </script>
+async function fetchThreats() {
+    try {
+        const response = await fetch('/api/threats');
+        const data = await response.json();
+        threats = data.threats;
+        chartData = data.chartData;
+        populateFilters(threats);
+        renderPage(threats);
+        renderCharts(chartData);
+    } catch (err) {
+        console.error("Error fetching threats:", err);
+    }
+}
+
+createMap();
+fetchThreats();
+</script>
 </body>
 </html>
