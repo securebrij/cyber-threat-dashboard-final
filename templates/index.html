@@ -1,121 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cyber Threat Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/leaflet.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; background-color: #111; color: #fff; margin: 0; padding: 0; }
-    .header { background: #1f2937; padding: 1rem; text-align: center; font-size: 1.5rem; }
-    .controls, .pagination, .charts { padding: 1rem; }
-    .controls input, .controls select { padding: 0.5rem; margin: 0.5rem; }
-    .card { background: #1e3a8a; margin: 1rem; padding: 1rem; border-left: 5px solid #facc15; border-radius: 8px; }
-    .tag.high { background: #dc2626; padding: 0.2rem 0.5rem; border-radius: 4px; }
-    .tag.medium { background: #facc15; padding: 0.2rem 0.5rem; border-radius: 4px; color: #000; }
-    .tag.low { background: #16a34a; padding: 0.2rem 0.5rem; border-radius: 4px; }
-    .pagination button { padding: 0.5rem 1rem; margin: 0.3rem; }
-    .grid { display: flex; flex-wrap: wrap; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #0f111a;
+      color: white;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      height: 100vh;
+    }
+    .sidebar {
+      padding: 1rem;
+      background-color: #0f111a;
+      overflow-y: auto;
+    }
+    .card {
+      background-color: #1e3a8a;
+      margin: 0.5rem 0;
+      padding: 1rem;
+      border-radius: 12px;
+      border-left: 8px solid gold;
+    }
+    .card .severity {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 8px;
+      margin-top: 8px;
+      font-weight: bold;
+    }
+    .severity.High {
+      background-color: red;
+    }
+    .severity.Medium {
+      background-color: gold;
+      color: black;
+    }
+    .severity.Low {
+      background-color: limegreen;
+    }
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .charts {
+      padding: 1rem;
+      background-color: #1a1c28;
+    }
   </style>
 </head>
 <body>
-  <div class="header">Cyber Threat Dashboard</div>
-
-  <div class="controls">
-    <input type="text" id="searchInput" placeholder="Search threats...">
-    <select id="typeSelect"></select>
-    <select id="publisherSelect"></select>
-    <select id="severitySelect">
-      <option value="All">All Severities</option>
-      <option value="High">High</option>
-      <option value="Medium">Medium</option>
-      <option value="Low">Low</option>
-    </select>
-    <select id="sortSelect">
-      <option value="">Sort By</option>
-      <option value="severity">Severity</option>
-      <option value="date">Date</option>
-    </select>
-    <button onclick="applyFilters()">Apply Filters</button>
+  <div class="container">
+    <div class="sidebar">
+      <div class="controls">
+        <input type="text" id="search" placeholder="Search threats..." />
+        <select id="categoryFilter"></select>
+        <select id="publisherFilter"></select>
+        <select id="severityFilter">
+          <option value="">All Severities</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+        <select id="sortFilter">
+          <option value="">Sort By</option>
+          <option value="asc">Timestamp ↑</option>
+          <option value="desc">Timestamp ↓</option>
+        </select>
+        <button onclick="applyFilters()">Apply Filters</button>
+      </div>
+      <div id="threatCards"></div>
+      <div class="charts">
+        <canvas id="barChart"></canvas>
+        <canvas id="pieChart"></canvas>
+        <canvas id="lineChart"></canvas>
+      </div>
+    </div>
+    <div id="map"></div>
   </div>
-
-  <div class="grid" id="threatCards"></div>
-  <div class="pagination" id="pagination"></div>
-
-  <div class="charts">
-    <canvas id="severityChart"></canvas>
-    <canvas id="publisherChart"></canvas>
-    <canvas id="timelineChart"></canvas>
-  </div>
-
   <script>
-    let currentPage = 1;
-    const perPage = 5;
+    const map = L.map('map').setView([20, 0], 2);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+    }).addTo(map);
+
+    setTimeout(() => map.invalidateSize(), 500);
 
     async function fetchThreats() {
-      const search = document.getElementById('searchInput').value;
-      const type = document.getElementById('typeSelect').value;
-      const publisher = document.getElementById('publisherSelect').value;
-      const severity = document.getElementById('severitySelect').value;
-      const sort = document.getElementById('sortSelect').value;
-
-      const res = await fetch(`/api/threats?search=${search}&type=${type}&publisher=${publisher}&severity=${severity}&sort=${sort}&page=${currentPage}&per_page=${perPage}`);
+      const res = await fetch("/api/threats");
       const data = await res.json();
-      renderCards(data.threats);
-      renderPagination(data.page, data.pages);
-      renderCharts(data.chart_data);
+      renderPage(data);
     }
 
-    function renderCards(threats) {
-      const container = document.getElementById('threatCards');
-      container.innerHTML = '';
+    function renderPage(threats) {
+      window.originalThreats = threats;
+      populateFilters(threats);
+      renderThreatCards(threats);
+      renderCharts(threats);
+      renderMap(threats);
+    }
+
+    function populateFilters(threats) {
+      const catSet = new Set();
+      const pubSet = new Set();
       threats.forEach(t => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        const sevClass = t.severity.toLowerCase();
-        card.innerHTML = `<strong>${t.name}</strong><br>${t.ip} | ${t.type} | ${t.publisher}<br><span class="tag ${sevClass}">${t.severity}</span>`;
-        container.appendChild(card);
+        catSet.add(t.type);
+        pubSet.add(t.author_name);
       });
-    }
-
-    function renderPagination(page, totalPages) {
-      const container = document.getElementById('pagination');
-      container.innerHTML = '';
-      for (let i = 1; i <= totalPages; i++) {
-        const btn = document.createElement('button');
-        btn.innerText = i;
-        btn.disabled = i === page;
-        btn.onclick = () => { currentPage = i; fetchThreats(); };
-        container.appendChild(btn);
-      }
-    }
-
-    function renderCharts(data) {
-      drawChart('severityChart', 'bar', data.severity);
-      drawChart('publisherChart', 'pie', data.publisher);
-      drawChart('timelineChart', 'line', data.timeline);
-    }
-
-    function drawChart(canvasId, type, dataset) {
-      const ctx = document.getElementById(canvasId).getContext('2d');
-      new Chart(ctx, {
-        type: type,
-        data: {
-          labels: Object.keys(dataset),
-          datasets: [{
-            label: canvasId,
-            data: Object.values(dataset),
-            borderWidth: 1,
-            fill: type === 'line'
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
+      const catF = document.getElementById("categoryFilter");
+      const pubF = document.getElementById("publisherFilter");
+      catF.innerHTML = `<option value="">All Categories</option>` + [...catSet].map(c => `<option value="${c}">${c}</option>`).join('');
+      pubF.innerHTML = `<option value="">All Publishers</option>` + [...pubSet].map(p => `<option value="${p}">${p}</option>`).join('');
     }
 
     function applyFilters() {
-      currentPage = 1;
-      fetchThreats();
+      const search = document.getElementById("search").value.toLowerCase();
+      const category = document.getElementById("categoryFilter").value;
+      const publisher = document.getElementById("publisherFilter").value;
+      const severity = document.getElementById("severityFilter").value;
+      const sort = document.getElementById("sortFilter").value;
+
+      let filtered = [...window.originalThreats];
+
+      if (search) filtered = filtered.filter(t => t.name.toLowerCase().includes(search));
+      if (category) filtered = filtered.filter(t => t.type === category);
+      if (publisher) filtered = filtered.filter(t => t.author_name === publisher);
+      if (severity) filtered = filtered.filter(t => t.severity === severity);
+      if (sort) filtered.sort((a, b) => sort === 'asc' ? new Date(a.created) - new Date(b.created) : new Date(b.created) - new Date(a.created));
+
+      renderThreatCards(filtered);
+      renderCharts(filtered);
+      renderMap(filtered);
+    }
+
+    function renderThreatCards(threats) {
+      const el = document.getElementById("threatCards");
+      el.innerHTML = "";
+      threats.forEach(t => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `<strong>${t.name}</strong><br>${t.indicator} | ${t.type} | ${t.author_name}<br><span class="severity ${t.severity}">${t.severity}</span>`;
+        el.appendChild(div);
+      });
+    }
+
+    function renderMap(threats) {
+      map.eachLayer(layer => { if (layer instanceof L.Marker) map.removeLayer(layer); });
+      threats.forEach(t => {
+        if (t.location) L.circleMarker(t.location, {
+          radius: 8,
+          color: severityColor(t.severity),
+          fillOpacity: 0.9
+        }).addTo(map).bindPopup(t.name);
+      });
+    }
+
+    function severityColor(sev) {
+      return sev === "High" ? "red" : sev === "Medium" ? "gold" : "limegreen";
+    }
+
+    function renderCharts(threats) {
+      const bySeverity = threats.reduce((a, t) => {
+        a[t.severity] = (a[t.severity] || 0) + 1; return a;
+      }, {});
+      const byDate = threats.reduce((a, t) => {
+        const d = new Date(t.created).toLocaleDateString();
+        a[d] = (a[d] || 0) + 1; return a;
+      }, {});
+
+      new Chart(document.getElementById("barChart"), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(bySeverity),
+          datasets: [{ label: "Threats by Severity", data: Object.values(bySeverity) }]
+        }
+      });
+
+      new Chart(document.getElementById("pieChart"), {
+        type: 'pie',
+        data: {
+          labels: Object.keys(bySeverity),
+          datasets: [{ data: Object.values(bySeverity) }]
+        }
+      });
+
+      new Chart(document.getElementById("lineChart"), {
+        type: 'line',
+        data: {
+          labels: Object.keys(byDate),
+          datasets: [{ label: "Threats Over Time", data: Object.values(byDate) }]
+        }
+      });
     }
 
     fetchThreats();
