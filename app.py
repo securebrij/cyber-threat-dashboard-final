@@ -1,3 +1,4 @@
+ HEAD
 from flask import Flask, render_template, jsonify, request
 import requests
 import os
@@ -112,3 +113,28 @@ def get_threats():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(debug=True, host="0.0.0.0", port=port)
+
+
+from flask import Flask, render_template, jsonify
+import json
+import os
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/api/threats')
+def threats():
+    try:
+        with open('mock_data.json') as f:
+            data = json.load(f)
+    except Exception as e:
+        data = []
+    return jsonify(data)
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 10000))
+    app.run(debug=True, host='0.0.0.0', port=port)
+ cbc0918 (✅ Push working version with fixed chart rendering and fallbacks)

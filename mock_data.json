@@ -1,5 +1,6 @@
 [
   {
+ HEAD
     "name": "FortiVoice Zero-Day Exploit",
     "created": "2025-05-15T10:00:00",
     "author_name": "InQuest",
@@ -36,3 +37,26 @@
     ]
   }
 ]
+
+    "author_name": "VertexLabs",
+    "indicator": "192.168.0.1",
+    "type": "Phishing",
+    "name": "Sample Threat A",
+    "severity": "High"
+  },
+  {
+    "author_name": "AlienVault",
+    "indicator": "192.168.0.2",
+    "type": "Phishing",
+    "name": "Sample Threat B",
+    "severity": "Medium"
+  },
+  {
+    "author_name": "CrowdStrike",
+    "indicator": "192.168.0.3",
+    "type": "Phishing",
+    "name": "Sample Threat C",
+    "severity": "Low"
+  }
+]
+ cbc0918 (✅ Push working version with fixed chart rendering and fallbacks)

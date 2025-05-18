@@ -1,9 +1,17 @@
+ HEAD
+
+
+ cbc0918 (✅ Push working version with fixed chart rendering and fallbacks)
 services:
   - type: web
     name: cyber-threat-dashboard
     runtime: python
     buildCommand: ""
+ HEAD
     startCommand: "gunicorn app:app"
+
+    startCommand: "python app.py"
+ cbc0918 (✅ Push working version with fixed chart rendering and fallbacks)
     envVars:
       - key: PORT
         value: 10000

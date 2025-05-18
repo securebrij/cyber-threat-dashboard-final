@@ -1,3 +1,4 @@
+ HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -212,5 +213,83 @@ async function fetchThreats() {
 createMap();
 fetchThreats();
 </script>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cyber Threat Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #12141c; color: white; }
+    .card { background: #1e2a5a; padding: 10px; margin: 10px; border-radius: 10px; }
+    .chart-container { display: flex; justify-content: space-around; margin-top: 20px; }
+    canvas { background: white; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Cyber Threat Dashboard</h1>
+  <div id="threats"></div>
+  <div class="chart-container">
+    <canvas id="barChart" width="300" height="200"></canvas>
+    <canvas id="pieChart" width="300" height="200"></canvas>
+    <canvas id="lineChart" width="300" height="200"></canvas>
+  </div>
+  <script>
+    async function fetchThreats() {
+      const res = await fetch('/api/threats');
+      const data = await res.json();
+      renderThreats(data);
+      renderCharts(data);
+    }
+
+    function renderThreats(threats) {
+      const container = document.getElementById('threats');
+      container.innerHTML = '';
+      threats.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `<strong>${t.name}</strong><br>${t.indicator || 'N/A'} | ${t.type || 'N/A'} | ${t.author_name || 'N/A'}`;
+        container.appendChild(card);
+      });
+    }
+
+    function renderCharts(threats) {
+      const counts = { High: 0, Medium: 0, Low: 0 };
+      threats.forEach(t => {
+        const severity = t.severity || 'Medium';
+        counts[severity] = (counts[severity] || 0) + 1;
+      });
+      const ctxBar = document.getElementById('barChart');
+      const ctxPie = document.getElementById('pieChart');
+      const ctxLine = document.getElementById('lineChart');
+      new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(counts),
+          datasets: [{ label: 'Threats by Severity', data: Object.values(counts), backgroundColor: ['red', 'orange', 'green'] }]
+        }
+      });
+      new Chart(ctxPie, {
+        type: 'pie',
+        data: {
+          labels: Object.keys(counts),
+          datasets: [{ data: Object.values(counts), backgroundColor: ['red', 'orange', 'green'] }]
+        }
+      });
+      new Chart(ctxLine, {
+        type: 'line',
+        data: {
+          labels: Object.keys(counts),
+          datasets: [{ label: 'Threat Trend', data: Object.values(counts), borderColor: 'cyan', fill: false }]
+        }
+      });
+    }
+
+    fetchThreats();
+  </script>
+ cbc0918 (✅ Push working version with fixed chart rendering and fallbacks)
 </body>
 </html>
