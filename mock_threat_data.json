@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Test Mock Threat",
+    "type": "Phishing",
+    "severity": "High",
+    "publisher": "MockSource",
+    "ip": "8.8.8.8",
+    "location": {
+      "lat": 37.7749,
+      "lon": -122.4194,
+      "city": "San Francisco",
+      "country": "United States"
+    },
+    "created": "2025-05-21T10:00:00"
+  }
+]
