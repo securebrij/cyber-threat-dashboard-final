@@ -1,16 +1,46 @@
-[
-  {
-    "name": "Test Mock Threat",
-    "type": "Phishing",
-    "severity": "High",
-    "publisher": "MockSource",
-    "ip": "8.8.8.8",
-    "location": {
-      "lat": 37.7749,
-      "lon": -122.4194,
-      "city": "San Francisco",
-      "country": "United States"
+{
+  "threats": [
+    {
+      "created": "2025-05-15T10:00:00",
+      "ip": "156.236.76.90",
+      "location": {
+        "city": "Los Angeles",
+        "country": "United States",
+        "lat": 34.0522,
+        "lon": -118.2437
+      },
+      "name": "CVE-2025-32756: FortiVoice Zero-Day Exploit Alert",
+      "publisher": "AlienVault",
+      "severity": "Medium",
+      "type": "Exploit"
     },
-    "created": "2025-05-21T10:00:00"
-  }
-]
+    {
+      "created": "2025-05-14T09:00:00",
+      "ip": "198.105.127.124",
+      "location": {
+        "city": "London",
+        "country": "United Kingdom",
+        "lat": 51.5074,
+        "lon": -0.1278
+      },
+      "name": "CVE-2025-32756: FortiVoice Zero-Day Exploit Alert",
+      "publisher": "AlienVault",
+      "severity": "High",
+      "type": "Exploit"
+    },
+    {
+      "created": "2025-05-13T11:30:00",
+      "ip": "218.187.69.59",
+      "location": {
+        "city": "Taichung",
+        "country": "Taiwan",
+        "lat": 24.1477,
+        "lon": 120.6736
+      },
+      "name": "CVE-2025-32756: FortiVoice Zero-Day Exploit Alert",
+      "publisher": "AlienVault",
+      "severity": "Low",
+      "type": "Exploit"
+    }
+  ]
+}
