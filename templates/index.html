@@ -1,129 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Cyber Threat Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
-  <style>
-    body {
-      background-color: #0d1117;
-      color: white;
-    }
-    .card {
-      background-color: #161b22;
-      margin-bottom: 10px;
-    }
-    .sidebar {
-      max-height: 90vh;
-      overflow-y: auto;
-      width: 350px;
-      background-color: #161b22;
-    }
-    #map {
-      height: 90vh;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Cyber Threat Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body { background-color: #0d1117; color: #c9d1d9; }
+        .card { background-color: #161b22; margin-bottom: 1rem; border: 1px solid #30363d; }
+        .severity-High { background-color: #da3633; color: white; padding: 2px 6px; border-radius: 4px; }
+        .severity-Medium { background-color: #e3b341; color: white; padding: 2px 6px; border-radius: 4px; }
+        .severity-Low { background-color: #238636; color: white; padding: 2px 6px; border-radius: 4px; }
+        #map { height: 500px; margin-top: 1rem; }
+    </style>
 </head>
 <body>
-  <nav class="navbar navbar-dark bg-dark px-3">
-    <span class="navbar-brand">Cyber Threat Dashboard</span>
-    <div class="d-flex">
-      <select id="typeFilter" class="form-select me-2"></select>
-      <select id="publisherFilter" class="form-select me-2"></select>
-      <select id="severityFilter" class="form-select me-2">
-        <option value="">All Severities</option>
-        <option>High</option>
-        <option>Medium</option>
-        <option>Low</option>
-      </select>
-      <button class="btn btn-success me-2" onclick="applyFilters()">Apply</button>
-      <button class="btn btn-primary" onclick="exportCSV()">Export</button>
+<div class="container-fluid p-4">
+    <h1 class="text-info">Cyber Threat Dashboard</h1>
+    <div class="row mb-3">
+        <div class="col-md-2"><input id="search" class="form-control" placeholder="Search name..."></div>
+        <div class="col-md-2">
+            <select id="type" class="form-select">
+                <option value="">All Types</option>
+                <option value="Exploit">Exploit</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select id="publisher" class="form-select">
+                <option value="">All Publishers</option>
+                <option value="AlienVault">AlienVault</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select id="severity" class="form-select">
+                <option value="">All Severities</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+            </select>
+        </div>
+        <div class="col-md-1"><button class="btn btn-success" onclick="loadThreats()">Apply</button></div>
+        <div class="col-md-1"><button class="btn btn-primary" onclick="exportCSV()">Export</button></div>
     </div>
-  </nav>
-  <div class="d-flex">
-    <div class="sidebar p-3" id="threatList"></div>
-    <div class="flex-fill" id="map"></div>
-  </div>
+    <div class="row">
+        <div class="col-md-4" id="threats"></div>
+        <div class="col-md-8"><div id="map"></div></div>
+    </div>
+</div>
 
-  <script>
-    let allThreats = [], currentPage = 1;
-    const map = L.map('map').setView([20, 0], 2);
-    let markers = [];
-
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<script>
+    let map = L.map('map').setView([20, 0], 2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19
+        maxZoom: 18,
     }).addTo(map);
 
-    function fetchThreats() {
-      const type = document.getElementById("typeFilter").value;
-      const pub = document.getElementById("publisherFilter").value;
-      const sev = document.getElementById("severityFilter").value;
+    let markers = [];
 
-      fetch(`/api/threats?page=1&per_page=100&type=${type}&publisher=${pub}&severity=${sev}`)
-        .then(res => res.json())
-        .then(data => {
-          allThreats = data.threats;
-          updateThreatList();
-          updateMap();
-          populateFilters(allThreats);
+    function loadThreats() {
+        const params = new URLSearchParams({
+            type: document.getElementById("type").value,
+            publisher: document.getElementById("publisher").value,
+            severity: document.getElementById("severity").value,
+            search: document.getElementById("search").value
         });
-    }
+        fetch(`/api/threats?${params}`)
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById("threats");
+                container.innerHTML = "";
+                markers.forEach(m => map.removeLayer(m));
+                markers = [];
 
-    function updateMap() {
-      markers.forEach(m => map.removeLayer(m));
-      markers = [];
-      allThreats.forEach(t => {
-        if (t.latitude && t.longitude) {
-          const marker = L.marker([t.latitude, t.longitude])
-            .bindPopup(\`<strong>\${t.title}</strong><br>\${t.type} - \${t.severity}\`)
-            .addTo(map);
-          markers.push(marker);
-        }
-      });
-    }
+                data.threats.forEach(threat => {
+                    const card = document.createElement("div");
+                    card.className = "card p-3";
+                    card.innerHTML = `
+                        <h5>${threat.title}</h5>
+                        <p>${threat.publisher} | ${threat.type} | 
+                            <span class="severity-${threat.severity}">${threat.severity}</span></p>
+                        <small>${threat.timestamp}</small>
+                    `;
+                    container.appendChild(card);
 
-    function updateThreatList() {
-      const list = document.getElementById("threatList");
-      list.innerHTML = "";
-      allThreats.forEach(t => {
-        const card = document.createElement("div");
-        card.className = "card p-2";
-        card.innerHTML = `
-          <h6>\${t.title}</h6>
-          <p class="mb-1">\${t.publisher} | \${t.type} | \${t.severity}</p>
-          <small>\${t.timestamp}</small>
-        `;
-        list.appendChild(card);
-      });
-    }
-
-    function populateFilters(threats) {
-      const types = [...new Set(threats.map(t => t.type))];
-      const pubs = [...new Set(threats.map(t => t.publisher))];
-
-      const typeSel = document.getElementById("typeFilter");
-      const pubSel = document.getElementById("publisherFilter");
-
-      typeSel.innerHTML = '<option value="">All Types</option>';
-      pubSel.innerHTML = '<option value="">All Publishers</option>';
-
-      types.forEach(t => typeSel.innerHTML += `<option value="\${t}">\${t}</option>`);
-      pubs.forEach(p => pubSel.innerHTML += `<option value="\${p}">\${p}</option>`);
-    }
-
-    function applyFilters() {
-      fetchThreats();
+                    if (threat.coordinates) {
+                        const marker = L.marker(threat.coordinates).addTo(map)
+                            .bindPopup(`<b>${threat.title}</b><br>${threat.publisher}`);
+                        markers.push(marker);
+                    }
+                });
+            });
     }
 
     function exportCSV() {
-      window.location.href = "/export";
+        fetch(`/api/threats`)
+            .then(res => res.json())
+            .then(data => {
+                const headers = ["Title", "Publisher", "Type", "Severity", "Timestamp"];
+                const rows = data.threats.map(t => [t.title, t.publisher, t.type, t.severity, t.timestamp]);
+                let csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = "threats.csv";
+                link.click();
+            });
     }
 
-    fetchThreats();
-    setInterval(fetchThreats, 60000);
-  </script>
+    loadThreats();
+</script>
 </body>
 </html>
