@@ -1,112 +1,97 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Cyber Threat Dashboard</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <style>
-        body { background-color: #0d1117; color: #c9d1d9; }
-        .card { background-color: #161b22; margin-bottom: 1rem; border: 1px solid #30363d; }
-        .severity-High { background-color: #da3633; color: white; padding: 2px 6px; border-radius: 4px; }
-        .severity-Medium { background-color: #e3b341; color: white; padding: 2px 6px; border-radius: 4px; }
-        .severity-Low { background-color: #238636; color: white; padding: 2px 6px; border-radius: 4px; }
-        #map { height: 500px; margin-top: 1rem; }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Cyber Threat Dashboard</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    crossorigin=""
+  />
+  <style>
+    body { margin: 0; background: #0c1015; color: white; font-family: sans-serif; }
+    #map { height: 500px; }
+    .card { background: #1c2230; margin: 10px; padding: 10px; border-radius: 5px; }
+    .card .severity-High { background-color: red; }
+    .card .severity-Medium { background-color: orange; }
+    .card .severity-Low { background-color: green; }
+  </style>
 </head>
 <body>
-<div class="container-fluid p-4">
-    <h1 class="text-info">Cyber Threat Dashboard</h1>
-    <div class="row mb-3">
-        <div class="col-md-2"><input id="search" class="form-control" placeholder="Search name..."></div>
-        <div class="col-md-2">
-            <select id="type" class="form-select">
-                <option value="">All Types</option>
-                <option value="Exploit">Exploit</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <select id="publisher" class="form-select">
-                <option value="">All Publishers</option>
-                <option value="AlienVault">AlienVault</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <select id="severity" class="form-select">
-                <option value="">All Severities</option>
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
-            </select>
-        </div>
-        <div class="col-md-1"><button class="btn btn-success" onclick="loadThreats()">Apply</button></div>
-        <div class="col-md-1"><button class="btn btn-primary" onclick="exportCSV()">Export</button></div>
-    </div>
-    <div class="row">
-        <div class="col-md-4" id="threats"></div>
-        <div class="col-md-8"><div id="map"></div></div>
-    </div>
-</div>
+  <h1 style="color:#00e1ff;padding:10px;">Cyber Threat Dashboard</h1>
+  <div style="padding:10px;">
+    <input type="text" id="search" placeholder="Search name..." />
+    <select id="type"><option value="">All Types</option></select>
+    <select id="publisher"><option value="">All Publishers</option></select>
+    <select id="severity"><option value="">All Severities</option></select>
+    <button onclick="loadThreats()">Apply</button>
+    <button onclick="exportCSV()">Export</button>
+  </div>
+  <div id="cards" style="display:flex;flex-wrap:wrap;"></div>
+  <div id="map"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
-<script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
     let map = L.map('map').setView([20, 0], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 18,
-    }).addTo(map);
-
-    let markers = [];
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     function loadThreats() {
-        const params = new URLSearchParams({
-            type: document.getElementById("type").value,
-            publisher: document.getElementById("publisher").value,
-            severity: document.getElementById("severity").value,
-            search: document.getElementById("search").value
+      const query = new URLSearchParams({
+        search: document.getElementById("search").value,
+        type: document.getElementById("type").value,
+        publisher: document.getElementById("publisher").value,
+        severity: document.getElementById("severity").value,
+      });
+      fetch("/api/threats?" + query)
+        .then(res => res.json())
+        .then(data => {
+          const cards = document.getElementById("cards");
+          cards.innerHTML = "";
+          data.threats.forEach(threat => {
+            const name = threat.name || "Unnamed";
+            const type = threat.type || "N/A";
+            const publisher = threat.publisher || "N/A";
+            const severity = threat.severity || "Unknown";
+            const timestamp = threat.timestamp || "";
+            const lat = threat.latitude || 0;
+            const lon = threat.longitude || 0;
+
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = \`
+              <h3>\${name}</h3>
+              <p>\${publisher} | \${type}</p>
+              <span class="severity-\${severity}">\${severity}</span>
+              <p>\${timestamp}</p>
+            \`;
+            cards.appendChild(card);
+            L.marker([lat, lon]).addTo(map).bindPopup(\`\${name} (\${severity})\`);
+          });
         });
-        fetch(`/api/threats?${params}`)
-            .then(res => res.json())
-            .then(data => {
-                const container = document.getElementById("threats");
-                container.innerHTML = "";
-                markers.forEach(m => map.removeLayer(m));
-                markers = [];
-
-                data.threats.forEach(threat => {
-                    const card = document.createElement("div");
-                    card.className = "card p-3";
-                    card.innerHTML = `
-                        <h5>${threat.title}</h5>
-                        <p>${threat.publisher} | ${threat.type} | 
-                            <span class="severity-${threat.severity}">${threat.severity}</span></p>
-                        <small>${threat.timestamp}</small>
-                    `;
-                    container.appendChild(card);
-
-                    if (threat.coordinates) {
-                        const marker = L.marker(threat.coordinates).addTo(map)
-                            .bindPopup(`<b>${threat.title}</b><br>${threat.publisher}`);
-                        markers.push(marker);
-                    }
-                });
-            });
     }
 
     function exportCSV() {
-        fetch(`/api/threats`)
-            .then(res => res.json())
-            .then(data => {
-                const headers = ["Title", "Publisher", "Type", "Severity", "Timestamp"];
-                const rows = data.threats.map(t => [t.title, t.publisher, t.type, t.severity, t.timestamp]);
-                let csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = "threats.csv";
-                link.click();
-            });
+      fetch("/api/threats")
+        .then(res => res.json())
+        .then(data => {
+          const csv = [
+            ["name", "type", "publisher", "severity", "timestamp", "latitude", "longitude"],
+            ...data.threats.map(t => [
+              t.name || "", t.type || "", t.publisher || "", t.severity || "",
+              t.timestamp || "", t.latitude || "", t.longitude || ""
+            ])
+          ].map(row => row.join(",")).join("\n");
+
+          const blob = new Blob([csv], {type: "text/csv"});
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = "threats.csv";
+          link.click();
+        });
     }
 
     loadThreats();
-</script>
+  </script>
 </body>
 </html>
