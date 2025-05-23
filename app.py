@@ -19,9 +19,8 @@ def geolocate_ip(ip):
                 "city": data.get("city", "Unknown"),
                 "country": data.get("country", "Unknown")
             }
-    except Exception as e:
-        print(f"Geo error for {ip}:", e)
-    return {"lat": None, "lon": None, "city": "Unknown", "country": "Unknown"}
+    except:
+        return {"lat": None, "lon": None, "city": "Unknown", "country": "Unknown"}
 
 def fetch_live_threats():
     url = "https://otx.alienvault.com/api/v1/pulses/subscribed"
@@ -35,13 +34,14 @@ def fetch_live_threats():
                 if ind.get("type") == "IPv4":
                     geo = geolocate_ip(ind["indicator"])
                     threats.append({
-                        "name": pulse.get("name", "Unnamed"),
+                        "title": pulse.get("name"),
                         "ip": ind["indicator"],
                         "publisher": pulse.get("author_name", "Unknown"),
                         "severity": "High",
                         "type": ind["type"],
-                        "created": pulse.get("created", datetime.utcnow().isoformat()),
-                        "location": geo
+                        "timestamp": pulse.get("created", datetime.utcnow().isoformat()),
+                        "latitude": geo.get("lat"),
+                        "longitude": geo.get("lon")
                     })
         return threats
     except Exception as e:
@@ -51,25 +51,20 @@ def fetch_live_threats():
 def load_mock_data():
     try:
         with open("mock_threat_data.json") as f:
-            return json.load(f).get("threats", [])
-    except Exception as e:
-        print("Mock load failed:", e)
+            return json.load(f)
+    except:
         return []
 
 def build_chart_data(threats):
-    chart_data = {
-        "publisher": {},
-        "severity": {},
-        "timeline": {}
-    }
+    chart = {"severity": {}, "publisher": {}, "timeline": {}}
     for t in threats:
-        pub = t.get("publisher", "Unknown")
         sev = t.get("severity", "Unknown")
-        day = t.get("created", "")[:10]
-        chart_data["publisher"][pub] = chart_data["publisher"].get(pub, 0) + 1
-        chart_data["severity"][sev] = chart_data["severity"].get(sev, 0) + 1
-        chart_data["timeline"][day] = chart_data["timeline"].get(day, 0) + 1
-    return chart_data
+        pub = t.get("publisher", "Unknown")
+        date = t.get("timestamp", "")[:10]
+        chart["severity"][sev] = chart["severity"].get(sev, 0) + 1
+        chart["publisher"][pub] = chart["publisher"].get(pub, 0) + 1
+        chart["timeline"][date] = chart["timeline"].get(date, 0) + 1
+    return chart
 
 @app.route("/")
 def index():
@@ -79,56 +74,40 @@ def index():
 def api_threats():
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", 10))
-    pub = request.args.get("publisher")
-    typ = request.args.get("type")
-    sev = request.args.get("severity")
+    severity = request.args.get("severity")
+    publisher = request.args.get("publisher")
+    ttype = request.args.get("type")
 
-    threats = fetch_live_threats()
-    if not threats:
-        threats = load_mock_data()
+    threats = fetch_live_threats() or load_mock_data()
 
-    # Filters
-    if pub:
-        threats = [t for t in threats if t.get("publisher") == pub]
-    if typ:
-        threats = [t for t in threats if t.get("type") == typ]
-    if sev:
-        threats = [t for t in threats if t.get("severity") == sev]
+    if severity:
+        threats = [t for t in threats if t["severity"] == severity]
+    if publisher:
+        threats = [t for t in threats if t["publisher"] == publisher]
+    if ttype:
+        threats = [t for t in threats if t["type"] == ttype]
 
-    # Pagination
     total = len(threats)
     start = (page - 1) * per_page
     end = start + per_page
-    page_data = threats[start:end]
-
     return jsonify({
-        "threats": page_data,
+        "threats": threats[start:end],
+        "total": total,
         "page": page,
         "per_page": per_page,
-        "total": total,
         "chart_data": build_chart_data(threats)
     })
 
 @app.route("/export")
 def export_csv():
-    threats = fetch_live_threats()
-    if not threats:
-        threats = load_mock_data()
-    header = ["name", "ip", "type", "publisher", "severity", "created", "lat", "lon"]
-    lines = [",".join(header)]
+    threats = fetch_live_threats() or load_mock_data()
+    output = ["title,ip,type,publisher,severity,timestamp,latitude,longitude"]
     for t in threats:
-        row = [
-            t.get("name", ""),
-            t.get("ip", ""),
-            t.get("type", ""),
-            t.get("publisher", ""),
-            t.get("severity", ""),
-            t.get("created", ""),
-            str(t.get("location", {}).get("lat", "")),
-            str(t.get("location", {}).get("lon", ""))
-        ]
-        lines.append(",".join(row))
-    return Response("\n".join(lines), mimetype="text/csv",
+        row = [t.get("title",""), t.get("ip",""), t.get("type",""), t.get("publisher",""),
+               t.get("severity",""), t.get("timestamp",""),
+               str(t.get("latitude","")), str(t.get("longitude",""))]
+        output.append(",".join(row))
+    return Response("\n".join(output), mimetype="text/csv",
                     headers={"Content-disposition": "attachment; filename=threats.csv"})
 
 if __name__ == "__main__":
